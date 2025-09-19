@@ -1,49 +1,51 @@
 const express = require("express");
-const path = require("path");
 const bodyParser = require("body-parser");
+const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(express.static("views"));
-app.use(bodyParser.json());
+// Настройки
+app.use(bodyParser.urlencoded({ extended: true }));
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
 
-// --- Простые ответы бота ---
-const botReplies = {
-  "привет": "Привет! 👋 Я твой помощник. Чем могу помочь?",
-  "как пользоваться": "Очень просто! Пиши в чат, а если хочешь — оставь отзыв на главной.",
-  "что это": "Это учебная платформа для общения и обмена знаниями.",
-  "пока": "До встречи! 👋"
-};
-
-// API для общения с ботом
-app.post("/bot", (req, res) => {
-  const userMsg = req.body.message.toLowerCase();
-  let reply = "Извини, я пока не знаю ответа 😅";
-
-  for (const key in botReplies) {
-    if (userMsg.includes(key)) {
-      reply = botReplies[key];
-      break;
-    }
-  }
-
-  res.json({ reply });
-});
-
-// --- Маршруты страниц ---
+// Главная страница
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "views", "index.html"));
+  res.render("index", { title: "Knowledge Platform" });
 });
 
+// Чат
 app.get("/chat", (req, res) => {
-  res.sendFile(path.join(__dirname, "views", "chat.html"));
+  res.render("chat");
 });
 
+// Отзывы
 app.get("/reviews", (req, res) => {
-  res.sendFile(path.join(__dirname, "views", "reviews.html"));
+  res.render("reviews", { reviews: reviews });
 });
 
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on port ${PORT}`);
+app.post("/reviews", (req, res) => {
+  const { name, text } = req.body;
+  reviews.push({ name, text });
+  res.redirect("/reviews");
 });
+
+// ИИ помощник (заглушка)
+app.get("/ai", (req, res) => {
+  res.render("ai", { answer: null });
+});
+
+app.post("/ai", (req, res) => {
+  const { question } = req.body;
+  let answer = "ИИ пока отвечает только шаблонно: " + question;
+  res.render("ai", { answer });
+});
+
+// Запуск сервера
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
+
+// Хранилище отзывов
+let reviews = [];
